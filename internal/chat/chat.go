@@ -4,9 +4,9 @@ type Chat struct {
 	Messages []string
 }
 
-type Messages struct {
+type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-var MsgHistory []Messages
+var MsgHistory []Message

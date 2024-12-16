@@ -14,7 +14,7 @@ import (
 )
 
 type Request struct {
-	Messages []chat.Messages `json:"messages"`
+	Messages []chat.Message `json:"messages"`
 }
 
 type Response struct {
@@ -36,7 +36,7 @@ var (
 	accId   = os.Getenv("CF_ACC_ID")
 )
 
-func sendMsg(MsgHistory []chat.Messages, endpoint string) tea.Cmd {
+func sendMsg(MsgHistory []chat.Message, endpoint string) tea.Cmd {
 	return func() tea.Msg {
 		reqUrl, _ := url.Parse(baseUrl)
 		reqUrl = reqUrl.JoinPath(accId).JoinPath("/ai/run/").JoinPath(endpoint)

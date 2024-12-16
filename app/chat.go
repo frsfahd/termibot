@@ -42,8 +42,8 @@ func (m *Chat_Model) setViewportContents() {
 
 func initChat(llm llm.LLM) (tea.Model, tea.Cmd) {
 	//reset the chat history
-	chat.MsgHistory = make([]chat.Messages, 0)
-	chat.MsgHistory = append(chat.MsgHistory, chat.Messages{Role: "system", Content: "You are a helpful assistant"})
+	chat.MsgHistory = make([]chat.Message, 0)
+	chat.MsgHistory = append(chat.MsgHistory, chat.Message{Role: "system", Content: "You are a helpful assistant"})
 
 	//setup the styling
 	x, y := constants.DocStyle.GetFrameSize()
@@ -126,7 +126,7 @@ func (m Chat_Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if res.Success && res.Result.Response != "" {
 			//update model chat history
-			chat.MsgHistory = append(chat.MsgHistory, chat.Messages{Role: "assistant", Content: res.Result.Response})
+			chat.MsgHistory = append(chat.MsgHistory, chat.Message{Role: "assistant", Content: res.Result.Response})
 			//update displayed chat histpry
 			m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("Assistant: ")+res.Result.Response)
 		} else {
@@ -139,7 +139,7 @@ func (m Chat_Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch {
 			case key.Matches(msg, constants.Keymap.Enter):
 				//append to model chat history
-				chat.MsgHistory = append(chat.MsgHistory, chat.Messages{Role: "user", Content: m.textarea.Value()})
+				chat.MsgHistory = append(chat.MsgHistory, chat.Message{Role: "user", Content: m.textarea.Value()})
 				cmds = append(cmds, sendMsg(chat.MsgHistory, m.llm.Endpoint))
 				//append to displayed chat history
 				m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("You: ")+m.textarea.Value())
