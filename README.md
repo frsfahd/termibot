@@ -2,6 +2,8 @@
 
 Terminal ChatBot utilizing CloudFlare Workers AI API
 
+![](demo.gif)
+
 ---
 
 ### ToDo
