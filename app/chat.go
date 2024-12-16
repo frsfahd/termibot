@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -25,6 +26,7 @@ const (
 )
 
 type Chat_Model struct {
+	spinner  spinner.Model
 	viewport viewport.Model
 	textarea textarea.Model
 	chat     chat.Chat
@@ -119,21 +121,29 @@ func (m Chat_Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case errMsg:
 		log.Println(msg)
 	case msgByte:
+		//delete spinner
+		m.chat.Messages = m.chat.Messages[:len(m.chat.Messages)-1]
+
 		var res Response
 		if err := json.Unmarshal(msg, &res); err != nil {
 			m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("System: ")+err.Error())
 			log.Println(err)
 		}
 		if res.Success && res.Result.Response != "" {
+
 			//update model chat history
 			chat.MsgHistory = append(chat.MsgHistory, chat.Message{Role: "assistant", Content: res.Result.Response})
 			//update displayed chat histpry
-			m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("Assistant: ")+res.Result.Response)
+			m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("Assistant: ")+res.Result.Response+"\n")
 		} else {
 			m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("System: something wrong..."))
 
 		}
 		m.viewport.GotoBottom()
+
+	case spinner.TickMsg:
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
 
 	case tea.KeyMsg:
 
@@ -162,6 +172,11 @@ func (m Chat_Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("You: ")+m.textarea.Value())
 				m.textarea.Reset()
 				// m.viewport.GotoBottom()
+				// init loading text
+				m.spinner = spinner.New()
+				m.spinner.Spinner = spinner.Line
+				m.spinner.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
+				m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("System: ⏳ waiting for respond..."))
 			}
 
 			m.textarea, cmd = m.textarea.Update(msg)
@@ -188,10 +203,14 @@ func (m Chat_Model) View() string {
 	title := fmt.Sprintf(
 		"You're currently chatting with %s\nType a message and press [Enter] to send.\nUse [tab] to switch between input box and message view.\nUse ⬆️ (up/PgUp) & ⬇️ (down/PgDown) for scrolling.", currentLLM)
 
-	msgInput := constants.MsgInputStyle.Render(m.textarea.View())
-	msgView := constants.MsgViewStyle.Render(m.viewport.View())
+	var msgInput string
+	var msgView string
+	var formatted string
+
+	msgInput = constants.MsgInputStyle.Render(m.textarea.View())
+	msgView = constants.MsgViewStyle.Render(m.viewport.View())
 	// formatted := fmt.Sprintf("%s\n\n%s\n\n%s", title, msgView, msgInput)
-	formatted := lipgloss.JoinVertical(lipgloss.Center, title, msgView, msgInput)
+	formatted = lipgloss.JoinVertical(lipgloss.Center, title, msgView, msgInput)
 
 	return constants.DocStyle.Render(formatted)
 }
