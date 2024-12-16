@@ -1,0 +1,4 @@
+CF_ACC_ID=[cloudflare account ID]
+CF_TOKEN=[cloudflare API token]
+
+BASE_URL=https://api.cloudflare.com/client/v4/accounts
