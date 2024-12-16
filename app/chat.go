@@ -188,9 +188,10 @@ func (m Chat_Model) View() string {
 	title := fmt.Sprintf(
 		"You're currently chatting with %s\nType a message and press [Enter] to send.\nUse [tab] to switch between input box and message view.\nUse ⬆️ (up/PgUp) & ⬇️ (down/PgDown) for scrolling.", currentLLM)
 
-	// formatted := lipgloss.JoinHorizontal(lipgloss.Center, title, m.viewport.View(), m.textarea.View())
 	msgInput := constants.MsgInputStyle.Render(m.textarea.View())
 	msgView := constants.MsgViewStyle.Render(m.viewport.View())
-	formatted := fmt.Sprintf("%s\n\n%s\n\n%s", title, msgView, msgInput)
+	// formatted := fmt.Sprintf("%s\n\n%s\n\n%s", title, msgView, msgInput)
+	formatted := lipgloss.JoinVertical(lipgloss.Center, title, msgView, msgInput)
+
 	return constants.DocStyle.Render(formatted)
 }
