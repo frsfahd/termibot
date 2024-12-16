@@ -133,21 +133,10 @@ func (m Chat_Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("System: something wrong..."))
 
 		}
+		m.viewport.GotoBottom()
 
 	case tea.KeyMsg:
-		if m.textarea.Focused() {
-			switch {
-			case key.Matches(msg, constants.Keymap.Enter):
-				//append to model chat history
-				chat.MsgHistory = append(chat.MsgHistory, chat.Message{Role: "user", Content: m.textarea.Value()})
-				cmds = append(cmds, sendMsg(chat.MsgHistory, m.llm.Endpoint))
-				//append to displayed chat history
-				m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("You: ")+m.textarea.Value())
-				m.textarea.Reset()
-				// m.viewport.GotoBottom()
-			}
 
-		}
 		switch {
 		case key.Matches(msg, constants.Keymap.Quit):
 			m.quitting = true
@@ -164,25 +153,29 @@ func (m Chat_Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch m.state {
 		case textareaView:
 			m.textarea.Focus()
+
+			if key.Matches(msg, constants.Keymap.Enter) {
+				//append to model chat history
+				chat.MsgHistory = append(chat.MsgHistory, chat.Message{Role: "user", Content: m.textarea.Value()})
+				cmds = append(cmds, sendMsg(chat.MsgHistory, m.llm.Endpoint))
+				//append to displayed chat history
+				m.chat.Messages = append(m.chat.Messages, constants.SenderStyle.Render("You: ")+m.textarea.Value())
+				m.textarea.Reset()
+				// m.viewport.GotoBottom()
+			}
+
 			m.textarea, cmd = m.textarea.Update(msg)
-			cmds = append(cmds, cmd)
 		case viewPortView:
 			m.textarea.Blur()
+
 			m.viewport, cmd = m.viewport.Update(msg)
-			cmds = append(cmds, cmd)
 
 		}
+		cmds = append(cmds, cmd)
 
 	}
 
-	// m.viewport, vpCmd = m.viewport.Update(msg)
-	// m.textarea, taCmd = m.textarea.Update(msg)
-
-	// m.textarea, tacmd = m.textarea.Update(msg)
-	// cmds = append(cmds, vpCmd, taCmd)
-
 	m.setViewportContents()
-	m.viewport.GotoBottom()
 
 	return m, tea.Batch(cmds...)
 }
@@ -193,7 +186,7 @@ func (m Chat_Model) View() string {
 	}
 	currentLLM := constants.LLMNameStyle.Render(m.llm.Name)
 	title := fmt.Sprintf(
-		"You're currently chatting with %s\nType a message and press Enter to send.", currentLLM)
+		"You're currently chatting with %s\nType a message and press [Enter] to send.\nUse [tab] to switch between input box and message view.\nUse ⬆️ (up/PgUp) & ⬇️ (down/PgDown) for scrolling.", currentLLM)
 
 	// formatted := lipgloss.JoinHorizontal(lipgloss.Center, title, m.viewport.View(), m.textarea.View())
 	msgInput := constants.MsgInputStyle.Render(m.textarea.View())
